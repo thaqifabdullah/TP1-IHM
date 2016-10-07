@@ -14,14 +14,14 @@ import java.awt.geom.RoundRectangle2D;
 
 import java.awt.Point;
 
-import java.util.Vector;
+import java.util.*;
 
 import static java.lang.Math.*;
 
 import grapher.fc.*;
 
 
-public class Grapher extends JPanel{
+public class Grapher extends JPanel implements ListSelectionListener{
 	static final int MARGIN = 40;
 	static final int STEP = 5;
 	
@@ -39,17 +39,22 @@ public class Grapher extends JPanel{
 
 	protected Vector<Function> functions;
 
-	MouseInputAdapter mouse;
-	boolean drawRectangle = false;
-	Point p0Rect, sizeRect;
-	final static float dash1[] = { 10.0f };
-	final static BasicStroke dashed = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+	protected JList list;
+	protected String[] expressions; 
 
-	public Grapher() {
+	protected MouseInputAdapter mouse;
+	protected boolean drawRectangle = false;
+	protected Point p0Rect, sizeRect;
+	protected String expressionsThick;
+
+	public Grapher(String[] expressions) {
 		xmin = -PI/2.; xmax = 3*PI/2;
 		ymin = -1.5;   ymax = 1.5;
 		
 		functions = new Vector<Function>();
+		this.expressions = expressions;
+		list = new JList(expressions);
+
 		initListener();
 	}
 
@@ -123,6 +128,16 @@ public class Grapher extends JPanel{
 		addMouseListener(mouse);
 		addMouseWheelListener(mouse);
 		
+
+		this.list.addListSelectionListener(this);
+	}
+
+	public void valueChanged(ListSelectionEvent e){
+		expressionsThick = expressions[e.getLastIndex()];
+		System.out.println(e.getFirstIndex());
+		System.out.println(e.getLastIndex());
+		System.out.println(expressionsThick);
+		repaint();
 	}
 	
 	public void add(String expression) {
@@ -186,7 +201,14 @@ public class Grapher extends JPanel{
 				Ys[i] = Y(f.y(xs[i]));
 			}
 			
-			g2.drawPolyline(Xs, Ys, N);
+			if(f.toString().equals(expressionsThick)){
+				g2.setStroke(new BasicStroke(2));
+				g2.drawPolyline(Xs, Ys, N);
+			}else{
+				g2.setStroke(new BasicStroke());
+				g2.drawPolyline(Xs, Ys, N);
+			}
+			
 		}
 
 		g2.setClip(null);
@@ -205,7 +227,6 @@ public class Grapher extends JPanel{
 		for(double y = -ystep; y > ymin; y -= ystep) { drawYTick(g2, y); }
 
 		if(drawRectangle){
-			g2.setStroke(dashed);
    			g2.draw(new RoundRectangle2D.Double(p0Rect.x, p0Rect.y, sizeRect.x, sizeRect.y, 10, 10));
    		}
 	}
@@ -285,5 +306,9 @@ public class Grapher extends JPanel{
 		xmin = min(x0, x1); xmax = max(x0, x1);
 		ymin = min(y0, y1); ymax = max(y0, y1);
 		repaint();	
+	}
+
+	public JList getJList(){
+		return list;
 	}
 }

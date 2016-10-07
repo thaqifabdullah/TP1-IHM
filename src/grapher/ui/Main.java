@@ -10,9 +10,9 @@ public class Main extends JFrame {
 		super(title);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		Grapher grapher = new Grapher();
-		JList list = new JList(expressions);	
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, list, grapher); 
+		Grapher grapher = new Grapher(expressions);
+
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, grapher.getJList(), grapher); 
 		splitPane.setOneTouchExpandable(true);
 		splitPane.setDividerLocation(150);
 

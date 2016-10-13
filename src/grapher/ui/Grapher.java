@@ -45,7 +45,7 @@ public class Grapher extends JPanel implements ListSelectionListener{
 	protected MouseInputAdapter mouse;
 	protected boolean drawRectangle = false;
 	protected Point p0Rect, sizeRect;
-	protected String expressionsThick;
+	protected ArrayList<String> listExpGras;
 
 	public Grapher(String[] expressions) {
 		xmin = -PI/2.; xmax = 3*PI/2;
@@ -53,6 +53,7 @@ public class Grapher extends JPanel implements ListSelectionListener{
 		
 		functions = new Vector<Function>();
 		this.expressions = expressions;
+		listExpGras = new ArrayList<String>();
 		list = new JList(expressions);
 
 		initListener();
@@ -133,10 +134,11 @@ public class Grapher extends JPanel implements ListSelectionListener{
 	}
 
 	public void valueChanged(ListSelectionEvent e){
-		expressionsThick = expressions[e.getLastIndex()];
-		System.out.println(e.getFirstIndex());
-		System.out.println(e.getLastIndex());
-		System.out.println(expressionsThick);
+		int [] tabSelectedIndex = list.getSelectedIndices();
+		for(int i : tabSelectedIndex){
+			System.out.println(i);
+			listExpGras.add(expressions[i]);
+		}
 		repaint();
 	}
 	
@@ -201,13 +203,19 @@ public class Grapher extends JPanel implements ListSelectionListener{
 				Ys[i] = Y(f.y(xs[i]));
 			}
 			
-			if(f.toString().equals(expressionsThick)){
-				g2.setStroke(new BasicStroke(2));
-				g2.drawPolyline(Xs, Ys, N);
-			}else{
-				g2.setStroke(new BasicStroke());
-				g2.drawPolyline(Xs, Ys, N);
+			Iterator<String> itr = this.list.iterator();
+			while(itr.hasNext()){
+				String exp = itr.next();
+					if(f.toString().equals(exp)){
+						itr.remove();
+						g2.setStroke(new BasicStroke(2));
+						g2.drawPolyline(Xs, Ys, N);
+				}else{
+					g2.setStroke(new BasicStroke());
+					g2.drawPolyline(Xs, Ys, N);
+				}
 			}
+			
 			
 		}
 

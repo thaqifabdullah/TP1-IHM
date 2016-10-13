@@ -3,6 +3,7 @@ package grapher.ui;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.*;
+import java.awt.*;
 
 
 public class Main extends JFrame {
@@ -21,7 +22,9 @@ public class Main extends JFrame {
 		}
 		
 		//add(grapher);
-		add(splitPane);
+		//add(splitPane);
+		add(grapher.getJToolBar(), BorderLayout.PAGE_END);
+		add(splitPane, BorderLayout.CENTER);
 		pack();
 	}
 

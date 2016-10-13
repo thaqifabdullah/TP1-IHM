@@ -21,7 +21,7 @@ import static java.lang.Math.*;
 import grapher.fc.*;
 
 
-public class Grapher extends JPanel implements ListSelectionListener{
+public class Grapher extends JPanel implements ListSelectionListener, ActionListener{
 	static final int MARGIN = 40;
 	static final int STEP = 5;
 	
@@ -40,6 +40,9 @@ public class Grapher extends JPanel implements ListSelectionListener{
 	protected Vector<Function> functions;
 
 	protected JList list;
+	protected DefaultListModel<String> listModel;
+	protected JToolBar toolbar;
+	protected JOptionPane input;
 	protected String[] expressions; 
 
 	protected MouseInputAdapter mouse;
@@ -53,13 +56,35 @@ public class Grapher extends JPanel implements ListSelectionListener{
 		
 		functions = new Vector<Function>();
 		this.expressions = expressions;
+		listModel = new DefaultListModel<String>();
+		for(String s:expressions){
+			listModel.addElement(s);
+		}
 		listExpGras = new ArrayList<String>();
-		list = new JList(expressions);
+		list = new JList(listModel);
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		toolbar = new JToolBar(JToolBar.HORIZONTAL);
+		initButtonsJToolBar();
+		input = new JOptionPane();
+		
 
 		initListener();
 	}
 
-	public void initListener(){
+	protected void initButtonsJToolBar(){
+		JButton addBut = new JButton("+");
+		JButton removeBut = new JButton(" - ");
+
+		addBut.setActionCommand("add");
+		addBut.addActionListener(this);
+		removeBut.setActionCommand("remove");
+		removeBut.addActionListener(this);
+
+		toolbar.add(addBut);
+		toolbar.add(removeBut);
+	}
+
+	protected void initListener(){
 		mouse = new MouseInputAdapter(){
 			Point depart;
 			boolean dragged = false;
@@ -130,13 +155,13 @@ public class Grapher extends JPanel implements ListSelectionListener{
 		addMouseWheelListener(mouse);
 		
 
-		this.list.addListSelectionListener(this);
+		list.addListSelectionListener(this);
 	}
 
 	public void valueChanged(ListSelectionEvent e){
 		int [] tabSelectedIndex = list.getSelectedIndices();
+		listExpGras.clear();
 		for(int i : tabSelectedIndex){
-			System.out.println(i);
 			listExpGras.add(expressions[i]);
 		}
 		repaint();
@@ -203,22 +228,19 @@ public class Grapher extends JPanel implements ListSelectionListener{
 				Ys[i] = Y(f.y(xs[i]));
 			}
 			
-			Iterator<String> itr = this.list.iterator();
-			while(itr.hasNext()){
-				String exp = itr.next();
-					if(f.toString().equals(exp)){
-						itr.remove();
-						g2.setStroke(new BasicStroke(2));
-						g2.drawPolyline(Xs, Ys, N);
+			if(!listExpGras.isEmpty()){
+				if(listExpGras.contains(f.toString())){
+					g2.setStroke(new BasicStroke(2));
+					g2.drawPolyline(Xs, Ys, N);
 				}else{
 					g2.setStroke(new BasicStroke());
 					g2.drawPolyline(Xs, Ys, N);
 				}
+			}else {
+				g2.drawPolyline(Xs, Ys, N);
 			}
-			
-			
 		}
-
+		g2.setStroke(new BasicStroke());
 		g2.setClip(null);
 
 		// axes
@@ -318,5 +340,33 @@ public class Grapher extends JPanel implements ListSelectionListener{
 
 	public JList getJList(){
 		return list;
+	}
+
+	public JToolBar getJToolBar(){
+		return toolbar;
+	}
+
+	public void actionPerformed(ActionEvent e){
+		if(e.getActionCommand().equals("add")){
+			System.out.println("add button");
+		}
+		if(e.getActionCommand().equals("remove")){
+			if(!list.isSelectionEmpty()){
+				int [] tabSelectedIndex = list.getSelectedIndices();
+				for(int i : tabSelectedIndex){
+					listModel.remove(i);
+				}
+				listExpGras.clear();
+				functions.clear();
+				expressions = new String[listModel.size()];
+				for (int i=0; i<listModel.size(); i++) {
+					expressions[i] = listModel.getElementAt(i);
+				}
+				for(String s : expressions) {
+					System.out.println(s);
+					add(s);
+				}
+			}
+		}
 	}
 }

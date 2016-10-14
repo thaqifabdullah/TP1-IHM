@@ -14,8 +14,8 @@ public class Main extends JFrame {
 		Grapher grapher = new Grapher(expressions);
 
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, grapher.getJList(), grapher); 
-		splitPane.setOneTouchExpandable(true);
-		splitPane.setDividerLocation(150);
+		splitPane.setOneTouchExpandable(false);
+		splitPane.setDividerLocation(100);
 
 		for(String expression : expressions) {
 			grapher.add(expression);
@@ -23,6 +23,11 @@ public class Main extends JFrame {
 		
 		//add(grapher);
 		//add(splitPane);
+		JPanel add_menu = new JPanel();
+		GridLayout gl = new GridLayout(1,1);
+		add_menu.setLayout(gl);
+		add_menu.add(grapher.menu_bar);
+		add(add_menu,BorderLayout.NORTH);
 		add(grapher.getJToolBar(), BorderLayout.PAGE_END);
 		add(splitPane, BorderLayout.CENTER);
 		pack();

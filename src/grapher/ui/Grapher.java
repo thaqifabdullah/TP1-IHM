@@ -21,7 +21,7 @@ import static java.lang.Math.*;
 import grapher.fc.*;
 
 
-public class Grapher extends JPanel implements ListSelectionListener, ActionListener{
+public class Grapher extends JPanel implements ListSelectionListener{
 	static final int MARGIN = 40;
 	static final int STEP = 5;
 	
@@ -44,11 +44,17 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 	protected JToolBar toolbar;
 	protected JOptionPane input;
 	protected String[] expressions; 
+	protected Action actionAdd, actionAddBut, actionRemove, actionRemoveBut; 
 
 	protected MouseInputAdapter mouse;
 	protected boolean drawRectangle = false;
 	protected Point p0Rect, sizeRect;
 	protected ArrayList<String> listExpGras;
+
+
+	protected JMenuBar menu_bar ;
+	protected JMenu menu_express;
+	protected JMenuItem [] menu_item;
 
 	public Grapher(String[] expressions) {
 		xmin = -PI/2.; xmax = 3*PI/2;
@@ -60,26 +66,41 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 		for(String s:expressions){
 			listModel.addElement(s);
 		}
+		actionAdd = new ActionAdd("Add...","Ajouter une fonction", new Integer(KeyEvent.VK_A));
+		actionAddBut = new ActionAdd("+", "Ajouter une fonction", new Integer(KeyEvent.VK_A));
+		actionRemove = new ActionRemove("Remove", "Supprimer une fonction", new Integer(KeyEvent.VK_S));
+		actionRemoveBut = new ActionRemove(" - ", "Supprimer une fonction", new Integer(KeyEvent.VK_S));
 		listExpGras = new ArrayList<String>();
 		list = new JList(listModel);
 		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		toolbar = new JToolBar(JToolBar.HORIZONTAL);
+		toolbar.setFloatable(false);
 		initButtonsJToolBar();
 		input = new JOptionPane();
-		
+		ajoutMenu();
 
 		initListener();
 	}
 
+	protected void ajoutMenu(){
+
+		menu_bar = new JMenuBar();
+		menu_item = new JMenuItem[2];
+		menu_item[0] = new JMenuItem(actionAdd);
+		menu_item[1] = new JMenuItem(actionRemove);
+
+		menu_express = new  JMenu("Expressions");
+		for (int i = 0; i<2 ;i++ ) {
+			menu_express.add(menu_item[i]);
+		}
+		menu_bar.add(menu_express);
+
+
+	}
+
 	protected void initButtonsJToolBar(){
-		JButton addBut = new JButton("+");
-		JButton removeBut = new JButton(" - ");
-
-		addBut.setActionCommand("add");
-		addBut.addActionListener(this);
-		removeBut.setActionCommand("remove");
-		removeBut.addActionListener(this);
-
+		JButton addBut = new JButton(actionAddBut);
+		JButton removeBut = new JButton(actionRemoveBut);
 		toolbar.add(addBut);
 		toolbar.add(removeBut);
 	}
@@ -346,10 +367,14 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 		return toolbar;
 	}
 
-	public void actionPerformed(ActionEvent e){
-		if(e.getActionCommand().equals("add")){
-			System.out.println("add button");
-			String newExpression = JOptionPane.showInputDialog(this, "Nouvelle Expression");
+	public class ActionAdd extends AbstractAction{
+		public ActionAdd(String s, String shortDescription, Integer mnemonic){
+			super(s);
+			putValue(SHORT_DESCRIPTION, shortDescription);
+    		putValue(MNEMONIC_KEY, mnemonic);
+		}
+		public void actionPerformed(ActionEvent e){
+			String newExpression = JOptionPane.showInputDialog(null, "Nouvelle Expression");
 			if(newExpression != null){
 				listModel.addElement(newExpression);
 				expressions = new String[listModel.size()];
@@ -361,7 +386,15 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 				}
 			}
 		}
-		if(e.getActionCommand().equals("remove")){
+	}
+
+	public class ActionRemove extends AbstractAction{
+		public ActionRemove(String s, String shortDescription, Integer mnemonic){
+			super(s);
+			putValue(SHORT_DESCRIPTION, shortDescription);
+	    	putValue(MNEMONIC_KEY, mnemonic);
+		}
+		public void actionPerformed(ActionEvent e){
 			if(!list.isSelectionEmpty()){
 				int [] tabSelectedIndex = list.getSelectedIndices();
 				String [] selectedExpressions = new String[tabSelectedIndex.length];

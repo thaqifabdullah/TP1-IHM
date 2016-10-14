@@ -349,12 +349,29 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 	public void actionPerformed(ActionEvent e){
 		if(e.getActionCommand().equals("add")){
 			System.out.println("add button");
+			String newExpression = JOptionPane.showInputDialog(this, "Nouvelle Expression");
+			if(newExpression != null){
+				listModel.addElement(newExpression);
+				expressions = new String[listModel.size()];
+				for (int i=0; i<listModel.size(); i++) {
+					expressions[i] = listModel.getElementAt(i);
+				}
+				for(String s : expressions) {
+					add(s);
+				}
+			}
 		}
 		if(e.getActionCommand().equals("remove")){
 			if(!list.isSelectionEmpty()){
 				int [] tabSelectedIndex = list.getSelectedIndices();
-				for(int i : tabSelectedIndex){
-					listModel.remove(i);
+				String [] selectedExpressions = new String[tabSelectedIndex.length];
+				for(int i=0; i<tabSelectedIndex.length; i++){
+					selectedExpressions[i] = listModel.getElementAt(tabSelectedIndex[i]);
+				}
+				for(String s:selectedExpressions){
+					if(listModel.contains(s)){
+						listModel.removeElement(s);
+					}
 				}
 				listExpGras.clear();
 				functions.clear();
@@ -363,7 +380,6 @@ public class Grapher extends JPanel implements ListSelectionListener, ActionList
 					expressions[i] = listModel.getElementAt(i);
 				}
 				for(String s : expressions) {
-					System.out.println(s);
 					add(s);
 				}
 			}

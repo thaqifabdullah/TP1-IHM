@@ -56,6 +56,10 @@ public class Grapher extends JPanel implements ListSelectionListener{
 	protected JMenu menu_express;
 	protected JMenuItem [] menu_item;
 
+	enum State{IDLE, PRESSED, DRAGGING};
+	State state = State.IDLE;
+	static final int DDRAG = 5;
+
 	public Grapher(String[] expressions) {
 		xmin = -PI/2.; xmax = 3*PI/2;
 		ymin = -1.5;   ymax = 1.5;
@@ -107,70 +111,124 @@ public class Grapher extends JPanel implements ListSelectionListener{
 
 	protected void initListener(){
 		mouse = new MouseInputAdapter(){
-			Point depart;
-			boolean dragged = false;
+			/*
+			version automate déterministe	
+			*/	
+			Point p;
 			Cursor curs, def;
-			public void mouseClicked(MouseEvent e){
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					zoom(e.getPoint(),5);					
-				}else if (e.getButton() == MouseEvent.BUTTON3) {
-					dezoom(e.getPoint(),5);
+			public void mousePressed(MouseEvent e){
+				switch(state){
+					case IDLE : 
+						p = e.getPoint();
+						state = state.PRESSED;
+					break;
+
+					default:
+						break;
 				}
 			}
 
 			public void mouseDragged(MouseEvent e){
 				if(SwingUtilities.isLeftMouseButton(e)){
 					curs = new Cursor(Cursor.HAND_CURSOR);
-					setCursor(curs);
-					if(!dragged){
-						dragged = true;
-						depart = e.getPoint();
-					}else{
-						translate(e.getX() - depart.x, e.getY() - depart.y);
-						depart = e.getPoint();
+					setCursor(curs); 
+					switch(state){
+						case PRESSED :
+								if((p.distance(e.getX(),e.getY()))>DDRAG){
+									translate(e.getX()-p.x,e.getY()-p.y);
+									p = e.getPoint();	
+									state = state.DRAGGING;
+								}else{
+									state = state.PRESSED;
+								} 
+							
+						break;
+						case DRAGGING:
+								translate(e.getX()-p.x,e.getY()-p.y);
+								p = e.getPoint();
+								state = state.DRAGGING;
+							break;
+						default:
+							break;
 					}
-					
 				}
 				if(SwingUtilities.isRightMouseButton(e)){
-					if(!dragged){
-						dragged = true;
-						depart = e.getPoint();
-					}else{
-						if((e.getX()-depart.x>=0) && (e.getY()-depart.y>=0))
-  							p0Rect = depart;
-  						else if((e.getX()-depart.x<0) && (e.getY()-depart.y<0))
-  							p0Rect = e.getPoint();
-  						else if((e.getX()-depart.x<0) && (e.getY()-depart.y>=0))
-  							p0Rect = new Point(e.getX(),depart.y);
-  						else
-  							p0Rect = new Point(depart.x,e.getY());
-  						sizeRect = new Point(Math.abs(e.getX()-depart.x),Math.abs(e.getY()-depart.y));
-  						drawRectangle = true;
-  						repaint();
+					switch(state){
+						case PRESSED :
+							if((p.distance(e.getX(),e.getY()))>DDRAG){
+								if((e.getX()-p.x>=0) && (e.getY()-p.y>=0))
+		  							p0Rect = p;
+		  						else if((e.getX()-p.x<0) && (e.getY()-p.y<0))
+		  							p0Rect = e.getPoint();
+		  						else if((e.getX()-p.x<0) && (e.getY()-p.y>=0))
+		  							p0Rect = new Point(e.getX(),p.y);
+		  						else
+		  							p0Rect = new Point(p.x,e.getY());
+		  						sizeRect = new Point(Math.abs(e.getX()-p.x),Math.abs(e.getY()-p.y));
+		  						drawRectangle = true;
+		  						repaint();
+		  						state = state.DRAGGING;
+		  					}else{
+		  						state = state.PRESSED;
+		  					}
+	  						break;
+
+						case DRAGGING:
+							if((e.getX()-p.x>=0) && (e.getY()-p.y>=0))
+	  							p0Rect = p;
+	  						else if((e.getX()-p.x<0) && (e.getY()-p.y<0))
+	  							p0Rect = e.getPoint();
+	  						else if((e.getX()-p.x<0) && (e.getY()-p.y>=0))
+	  							p0Rect = new Point(e.getX(),p.y);
+	  						else
+	  							p0Rect = new Point(p.x,e.getY());
+	  						sizeRect = new Point(Math.abs(e.getX()-p.x),Math.abs(e.getY()-p.y));
+	  						drawRectangle = true;
+	  						repaint();
+	  						state = state.DRAGGING;
+	  						break;
+
+	  					default:
+	  						break;
 					}
-					
-					
 				}
 			}
 
 			public void mouseReleased(MouseEvent e){
-				if(e.getButton() == MouseEvent.BUTTON1){
-					dragged = false;
-					setCursor(curs.getDefaultCursor());
+				switch(state){
+					case PRESSED:
+						if (e.getButton() == MouseEvent.BUTTON1){
+							zoom(e.getPoint(),5);
+							state = state.IDLE;
+						}else if (e.getButton() == MouseEvent.BUTTON3){
+							zoom(e.getPoint(),-5);
+						}
+						break;
+					case DRAGGING:
+						if(e.getButton() == MouseEvent.BUTTON1){
+							setCursor(curs.getDefaultCursor());
+						}
+						if(e.getButton() == MouseEvent.BUTTON3){
+							drawRectangle = false;
+							repaint();
+							zoom(p, e.getPoint());
+						}
+						state = state.IDLE;
+						break;
+					default : 
+							break;
 				}
-				if(e.getButton() == MouseEvent.BUTTON3){
-					dragged = false;
-					drawRectangle = false;
-					repaint();
-					zoom(depart, e.getPoint());
-				}
-				
+
 			}
 
 			public void mouseWheelMoved(MouseWheelEvent e){
 				zoom(e.getPoint(),-e.getWheelRotation());
 			}
+
+
 		};
+
+
 		addMouseMotionListener(mouse);
 		addMouseListener(mouse);
 		addMouseWheelListener(mouse);
@@ -337,15 +395,6 @@ public class Grapher extends JPanel implements ListSelectionListener{
 		double ds = exp(dz*.01);
 		xmin = x + (xmin-x)/ds; xmax = x + (xmax-x)/ds;
 		ymin = y + (ymin-y)/ds; ymax = y + (ymax-y)/ds;
-		repaint();	
-	}
-
-	protected void dezoom(Point center, int dz) {
-		double x = x(center.x);
-		double y = y(center.y);
-		double ds = exp(dz*.01);
-		xmin = x + (xmin-x)*ds; xmax = x + (xmax-x)*ds;
-		ymin = y + (ymin-y)*ds; ymax = y + (ymax-y)*ds;
 		repaint();	
 	}
 	
